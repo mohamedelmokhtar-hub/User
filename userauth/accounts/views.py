@@ -37,10 +37,22 @@ def register_view(request):
         # إنشاء المستخدم
         user=User.objects.create_user(username=username, email=email, password=password)
         login(request,user)
-        return JsonResponse({"message": "Registration successful"})
+        response=JsonResponse({"message": "Registration successful"},status=201)
+        response.set_cookie('is_authenticated','true',httponly=False)
+        return response
 
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+def check_auth(request):
+    if request.method != 'GET':
+        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
+    if request.user.is_authenticated:
+            print(request.user.username)
+            return JsonResponse({"is_logged_in": True, "username": request.user.username})
+    return JsonResponse({"is_logged_in": False}, status=401)
+   
