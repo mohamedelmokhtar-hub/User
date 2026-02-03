@@ -47,6 +47,30 @@ def register_view(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
+@csrf_exempt
+def login_view(request): # غيرنا الاسم لتجنب التعارض
+    if request.method != 'POST':
+        return JsonResponse({"error": "POST required"}, status=405)
+    
+    try:
+        info = json.loads(request.body)
+        username = info.get('username')
+        password = info.get('password')
+
+        # استخدام authenticate للتأكد من البيانات
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user) # استخدام الاسم المستعار auth_login
+            response = JsonResponse({'success': 'Login successful', 'username': user.username})
+            response.set_cookie('is_authenticated', 'true', httponly=False)
+            return response
+        else:
+            return JsonResponse({'error': 'Invalid username or password'}, status=400)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)    
+
 
 def check_auth(request):
     if request.method != 'GET':
